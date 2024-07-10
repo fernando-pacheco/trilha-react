@@ -11,8 +11,8 @@ export function CreateTripPage() {
     const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false)
     const [isConfirmTripModalOpen, setIsConfirmTripModalOpen] = useState(false)
     const [emailsToInvite, setEmailsToInvite] = useState<string[]>([])
-    const [destino, setDestino] = useState('Florianópolis, Brasil')
-    const [data, setData] = useState('16 a 27 de Agosto de 2024')
+    // const [destino, setDestino] = useState('Florianópolis, Brasil')
+    // const [data, setData] = useState('16 a 27 de Agosto de 2024')
     const navigate = useNavigate()
 
     function openGuestsInput() {
@@ -110,8 +110,8 @@ export function CreateTripPage() {
                     <ConfirmTripModal
                         closeConfirmTripModal={closeConfirmTripModal}
                         createTrip={createTrip}
-                        data={data}
-                        destino={destino}
+                        data={'data'}
+                        destino={'destino'}
                     />
                 )}
             </div>

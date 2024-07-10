@@ -18,7 +18,7 @@ export function DestinationHeader() {
             <div className="w-px h-6 bg-zinc-800" />
 
             <div>
-                <Button>
+                <Button variant="secondary">
                     Alterar local/data
                     <Settings2 className="size-5" />
                 </Button>
