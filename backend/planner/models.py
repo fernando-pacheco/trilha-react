@@ -17,18 +17,18 @@ class ParticipantsModel(models.Model):
     email = models.EmailField()
     is_confirmed = models.BooleanField(default=False)
     is_owner = models.BooleanField(default=False)
-    trip_id = models.ForeignKey(TripsModel, related_name='participants', on_delete=models.CASCADE)
+    trip = models.ForeignKey(TripsModel, related_name='participants', on_delete=models.CASCADE)
 
 
 class ActivitiesModels(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=50)
     occurs_at = models.DateTimeField()
-    trip_id = models.ForeignKey(TripsModel, related_name="activities", on_delete=models.CASCADE)
+    trip = models.ForeignKey(TripsModel, related_name="activities", on_delete=models.CASCADE)
 
 
 class LinksModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=50)
     url = models.URLField()
-    trip_id = models.ForeignKey(TripsModel, related_name="urls", on_delete=models.CASCADE)
+    trip = models.ForeignKey(TripsModel, related_name="urls", on_delete=models.CASCADE)
