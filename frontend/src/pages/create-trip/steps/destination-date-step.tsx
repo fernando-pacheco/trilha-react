@@ -10,15 +10,20 @@ interface DestinationDateStepProps {
     isGuestsInputOpen: boolean
     closeGuestsInput: () => void
     openGuestsInput: () => void
+    setDestination: (destination: string) => void
+    setEventDate: (dates: DateRange | undefined) => void
+    eventDate: DateRange | undefined
 }
 
 export function DestinationDateStep({
     closeGuestsInput,
     isGuestsInputOpen,
     openGuestsInput,
+    setDestination,
+    setEventDate,
+    eventDate
 }: DestinationDateStepProps) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-    const [eventData, setEventDate] = useState<DateRange | undefined>()
 
 
     function openDatePicker() {
@@ -29,8 +34,8 @@ export function DestinationDateStep({
         return setIsDatePickerOpen(false)
     }
 
-    const displayedDate = eventData && eventData.from && eventData.to
-        ? format(eventData.from, "d' de 'LLL").concat(' até ').concat(format(eventData.to, "d' de 'LLL"))
+    const displayedDate = eventDate && eventDate.from && eventDate.to
+        ? format(eventDate.from, "d' de 'LLL").concat(' até ').concat(format(eventDate.to, "d' de 'LLL"))
         : null
 
     return (
@@ -42,6 +47,7 @@ export function DestinationDateStep({
                     type="text"
                     placeholder="Para onde você vai?"
                     className="bg-transparent text-lg placeholder-zinc-400 outline-none flex-1"
+                    onChange={event => setDestination(event.target.value)}
                 />
             </div>
             <button
@@ -66,7 +72,7 @@ export function DestinationDateStep({
                                 </button>
                             </div>
                         </div>
-                        <DayPicker mode="range" selected={eventData} onSelect={setEventDate} />
+                        <DayPicker mode="range" selected={eventDate} onSelect={setEventDate} />
                     </div>
                 </div>
             )}
