@@ -5,7 +5,7 @@ from dateutil.parser import parse as parse_datetime
 from .models import TripsModel, ParticipantsModel, ActivitiesModels, LinksModel
 from django.utils.timezone import make_aware, is_naive
 from django.utils import timezone
-from datetime import datetime
+from datetime import timedelta
 from uuid import UUID
 from django.shortcuts import get_object_or_404
 import pytz
@@ -120,16 +120,31 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         tripId = str(kwargs.get('tripId')).replace('-', '')
+        trip = get_object_or_404(TripsModel, id=tripId)
         queryset = self.queryset.filter(trip_id=tripId)
+
+        days = str(trip.ends_at - trip.starts_at).split(' ')[0]
+
         grouped_activities = defaultdict(list)
 
         for activity in queryset:
-            grouped_activities[activity.occurs_at.date()].append(activity)
+            for i in range(int(days) + 1):
+                activity_date = activity.occurs_at.date()
+                trip_date = (trip.starts_at + timedelta(days=i)).date()
+                
+                if activity_date == trip_date:
+                    grouped_activities[activity_date].append(activity)
 
-        sorted_dates = sorted(grouped_activities.keys())
+        for i in range(int(days) + 1):
+            date_to_check = (trip.starts_at + timedelta(days=i)).date()
+            if date_to_check not in grouped_activities:
+                grouped_activities[date_to_check] = []
+
+        grouped_activities = dict(grouped_activities)
+        sorted_dict = sorted(grouped_activities.keys())
 
         response_data = []
-        for date in sorted_dates:
+        for date in sorted_dict:
             activities_for_date = grouped_activities[date]
             serialized_activities = ActivitiesSerializer(activities_for_date, many=True).data
             response_data.append({
@@ -145,10 +160,14 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
         data = serializer.data
 
         trip = TripsModel.objects.get(id=data['trip'])
-        occurs_at = datetime.strptime(data['occurs_at'], '%d/%m/%Y %H:%M')
+        occurs_at = data['occurs_at']
+        sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
 
-        sao_paulo_tz = pytz.timezone('UTC')
-        occurs_at = make_aware(occurs_at, sao_paulo_tz)
+        if isinstance(occurs_at, str):
+            occurs_at = parse_datetime(occurs_at)
+
+        if is_naive(occurs_at):
+            occurs_at = make_aware(occurs_at, sao_paulo_tz)
 
         if not trip:
             return Response({'message': 'Trip not found.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
