@@ -1,8 +1,9 @@
 from rest_framework import viewsets, status
 from collections import defaultdict
 from rest_framework.response import Response
+from dateutil.parser import parse as parse_datetime
 from .models import TripsModel, ParticipantsModel, ActivitiesModels, LinksModel
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, is_naive
 from django.utils import timezone
 from datetime import datetime
 from uuid import UUID
@@ -36,22 +37,29 @@ class TripsViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.data
+        data = serializer.validated_data
 
         sao_paulo_tz = pytz.timezone('America/Sao_Paulo')
         current_datetime = timezone.now().astimezone(sao_paulo_tz)
 
-        starts_at = datetime.strptime(data['starts_at'], '%d/%m/%Y %H:%M')
-        ends_at = datetime.strptime(data['ends_at'], '%d/%m/%Y %H:%M')
+        starts_at = data['starts_at']
+        ends_at = data['ends_at']
 
-        starts_at = make_aware(starts_at, sao_paulo_tz)
-        ends_at = make_aware(ends_at, sao_paulo_tz)
+        if isinstance(starts_at, str):
+            starts_at = parse_datetime(starts_at)
+        if isinstance(ends_at, str):
+            ends_at = parse_datetime(ends_at)
+
+        if is_naive(starts_at):
+            starts_at = make_aware(starts_at, sao_paulo_tz)
+        if is_naive(ends_at):
+            ends_at = make_aware(ends_at, sao_paulo_tz)
 
         if starts_at < current_datetime:
-            return Response({'message': 'Invalid trip start date.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Invalid trip start date.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if ends_at < starts_at:
-            return Response({'message': 'Invalid trip end date.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'Invalid trip end date.'}, status=status.HTTP_400_BAD_REQUEST)
         
         trip = TripsModel.objects.create(
             destination=data['destination'],
@@ -67,7 +75,7 @@ class TripsViewSet(viewsets.ModelViewSet):
             is_owner=True
         )
 
-        for email in data['emails_to_invite']:
+        for email in data.get('emails_to_invite', []):
             ParticipantsModel.objects.create(
                 trip=trip,
                 email=email,
@@ -75,9 +83,10 @@ class TripsViewSet(viewsets.ModelViewSet):
                 is_owner=False
             )
 
+        serializer_data = TripsSerializer(trip).data
         headers = self.get_success_headers(serializer.data)
         
-        return Response(serializer.data, status=201, headers=headers)
+        return Response(serializer_data, status=status.HTTP_201_CREATED, headers=headers)
 
 class ParticipantsViewSet(viewsets.ModelViewSet):
     queryset = ParticipantsModel.objects.all()
@@ -147,14 +156,16 @@ class ActivitiesViewSet(viewsets.ModelViewSet):
         if not trip.starts_at < occurs_at < trip.ends_at:
             return Response({'message': 'Invalid activity date.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        ActivitiesModels.objects.create(
+        activity = ActivitiesModels.objects.create(
             title=data['title'],
             occurs_at=occurs_at,
             trip=trip
         )
 
+        serializer_data = ActivitiesSerializer(activity).data
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
+        
+        return Response(serializer_data, status=201, headers=headers)
 
 class LinksViewSet(viewsets.ModelViewSet):
     queryset = LinksModel.objects.all()

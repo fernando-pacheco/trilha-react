@@ -7,7 +7,6 @@ class ParticipantsSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'email', 'is_confirmed', 'is_owner', 'trip']
 
 class ActivitiesSerializer(serializers.ModelSerializer):
-    occurs_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M', input_formats=['%d/%m/%Y %H:%M'])
     class Meta:
         model = ActivitiesModels
         fields = ['id', 'title', 'occurs_at', 'trip']
@@ -30,8 +29,6 @@ class TripCreateSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField()
     owner_email = serializers.EmailField()
     emails_to_invite = serializers.ListField(child=serializers.EmailField(), required=False)
-    starts_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M', input_formats=['%d/%m/%Y %H:%M'])
-    ends_at = serializers.DateTimeField(format='%d/%m/%Y %H:%M', input_formats=['%d/%m/%Y %H:%M'])
 
     class Meta:
         model = TripsModel
