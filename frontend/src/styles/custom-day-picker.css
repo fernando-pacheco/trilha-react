@@ -1,0 +1,12 @@
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  color: #1A2E05 !important;
+  opacity: 1 !important;
+  background-color: #BEF264 !important;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+    color: #1A2E05 !important;
+    background-color: #BEF264 !important;
+  }
